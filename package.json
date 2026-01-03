@@ -65,7 +65,8 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "hello": "ts-node src/examples/hello-world.ts"
+    "hello": "ts-node src/examples/hello-world.ts",
+    "postinstall": "npm list -g @anthropic-ai/claude-code > /dev/null 2>&1 || npm install -g @anthropic-ai/claude-code"
   },
   "devDependencies": {
     "@types/node": "^18.19.0",

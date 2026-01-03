@@ -52,6 +52,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // .claude/agents/ ディレクトリの存在確認と作成
   ensureAgentsDirectory();
+
+  // Claude Code CLI のインストール状態確認
+  checkClaudeCodeCli();
 }
 
 /**
@@ -59,6 +62,37 @@ export function activate(context: vscode.ExtensionContext): void {
  */
 export function deactivate(): void {
   console.log('Claude Workflow extension is now deactivated');
+}
+
+/**
+ * Claude Code CLI がインストールされているかチェック
+ */
+async function checkClaudeCodeCli(): Promise<void> {
+  const { exec } = await import('child_process');
+  const { promisify } = await import('util');
+  const execAsync = promisify(exec);
+
+  try {
+    await execAsync('claude --version');
+    console.log('Claude Code CLI is installed');
+  } catch (error) {
+    vscode.window
+      .showWarningMessage(
+        'Claude Code CLI がインストールされていません。インストールしますか？',
+        'インストール',
+        'キャンセル'
+      )
+      .then(async (selection) => {
+        if (selection === 'インストール') {
+          const terminal = vscode.window.createTerminal('Claude Code インストール');
+          terminal.show();
+          terminal.sendText('npm install -g @anthropic-ai/claude-code');
+          vscode.window.showInformationMessage(
+            'Claude Code CLI のインストールを開始しました。ターミナルで進行状況を確認してください。'
+          );
+        }
+      });
+  }
 }
 
 /**
