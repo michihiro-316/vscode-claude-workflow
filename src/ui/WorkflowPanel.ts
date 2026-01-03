@@ -47,7 +47,7 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         case 'startWorkflow':
           await this._handleStartWorkflow(data.task);
           break;
-        case 'approveplan':
+        case 'approvePlan':
           await this._handleApprovePlan(data.approved);
           break;
         case 'stopWorkflow':
@@ -98,6 +98,7 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
     this._workflowManager
       .executeWorkflow(task, async (pmOutput: PMOutput) => {
         // PMの計画をWebviewに送信
+        console.log('[WorkflowPanel] Sending pmPlan to UI:', JSON.stringify(pmOutput, null, 2));
         this._postMessage({
           type: 'pmPlan',
           plan: pmOutput,

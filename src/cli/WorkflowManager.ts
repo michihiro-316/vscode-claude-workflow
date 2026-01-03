@@ -129,6 +129,7 @@ export class WorkflowManager extends EventEmitter {
       }
 
       const pmOutput = this.parsePMOutput(pmResult.output);
+      console.log('[WorkflowManager] Parsed PM output:', JSON.stringify(pmOutput, null, 2));
       this.currentResult.pmOutput = pmOutput;
 
       // ステップ2: ユーザー承認を待つ
@@ -274,14 +275,39 @@ export class WorkflowManager extends EventEmitter {
    * PMエージェントの出力をパース
    */
   private parsePMOutput(output: string): PMOutput {
+    console.log('[parsePMOutput] Raw output length:', output.length);
+    console.log('[parsePMOutput] First 500 chars:', output.substring(0, 500));
     try {
-      // JSONブロックを抽出
-      const jsonMatch = output.match(/```json\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[1]);
+      // 方法1: ```json ブロックを抽出
+      const jsonBlockMatch = output.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonBlockMatch) {
+        return JSON.parse(jsonBlockMatch[1]);
       }
 
-      // JSONブロックがない場合は全体をパース
+      // 方法2: { から始まるJSON を探す
+      const jsonStartIndex = output.indexOf('{');
+      if (jsonStartIndex !== -1) {
+        // 最後の } を見つける
+        let braceCount = 0;
+        let jsonEndIndex = -1;
+        for (let i = jsonStartIndex; i < output.length; i++) {
+          if (output[i] === '{') braceCount++;
+          if (output[i] === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              jsonEndIndex = i + 1;
+              break;
+            }
+          }
+        }
+
+        if (jsonEndIndex !== -1) {
+          const jsonStr = output.substring(jsonStartIndex, jsonEndIndex);
+          return JSON.parse(jsonStr);
+        }
+      }
+
+      // 方法3: 全体をパース
       return JSON.parse(output);
     } catch (error) {
       // JSONパースに失敗した場合、デフォルト構造を返す
