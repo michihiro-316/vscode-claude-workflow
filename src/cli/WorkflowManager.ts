@@ -82,7 +82,7 @@ export class WorkflowManager extends EventEmitter {
     });
 
     this.runner.on('progress', (data) => {
-      this.emitAgentEvent('progress', data.agentName, data.chunk);
+      this.emitAgentEvent('progress', data.agentName, data.message);
     });
 
     this.runner.on('complete', (data) => {

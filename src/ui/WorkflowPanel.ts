@@ -449,6 +449,43 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         const logSection = document.getElementById('log-section');
         const log = document.getElementById('log');
 
+        // 状態を復元
+        const previousState = vscode.getState();
+        if (previousState) {
+            taskInput.value = previousState.taskInput || '';
+            purposeInput.value = previousState.purposeInput || '';
+            techStackInput.value = previousState.techStackInput || '';
+            backendInput.value = previousState.backendInput || '';
+            constraintsInput.value = previousState.constraintsInput || '';
+            otherInput.value = previousState.otherInput || '';
+
+            if (previousState.isRunning) {
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            }
+        }
+
+        // 入力値が変更されたら状態を保存
+        function saveInputState() {
+            const state = vscode.getState() || {};
+            vscode.setState({
+                ...state,
+                taskInput: taskInput.value,
+                purposeInput: purposeInput.value,
+                techStackInput: techStackInput.value,
+                backendInput: backendInput.value,
+                constraintsInput: constraintsInput.value,
+                otherInput: otherInput.value,
+            });
+        }
+
+        taskInput.addEventListener('input', saveInputState);
+        purposeInput.addEventListener('input', saveInputState);
+        techStackInput.addEventListener('input', saveInputState);
+        backendInput.addEventListener('input', saveInputState);
+        constraintsInput.addEventListener('input', saveInputState);
+        otherInput.addEventListener('input', saveInputState);
+
         // ワークフロー開始
         startBtn.addEventListener('click', () => {
             const task = taskInput.value.trim();
@@ -477,6 +514,10 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
             statusSection.classList.remove('hidden');
             logSection.classList.remove('hidden');
             log.innerHTML = '';
+
+            // 実行中状態を保存
+            const state = vscode.getState() || {};
+            vscode.setState({ ...state, isRunning: true });
         });
 
         // ワークフロー停止
@@ -484,6 +525,10 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
             vscode.postMessage({ type: 'stopWorkflow' });
             startBtn.disabled = false;
             stopBtn.disabled = true;
+
+            // 停止状態を保存
+            const state = vscode.getState() || {};
+            vscode.setState({ ...state, isRunning: false });
         });
 
         // 計画承認
@@ -605,6 +650,10 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
                 status.textContent = \`❌ \${result.error || '失敗しました'}\`;
                 status.className = 'status status-error';
             }
+
+            // 完了状態を保存
+            const state = vscode.getState() || {};
+            vscode.setState({ ...state, isRunning: false });
         }
     </script>
 </body>

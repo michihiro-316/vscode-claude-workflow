@@ -186,9 +186,10 @@ export class ClaudeCodeRunner extends EventEmitter {
       this.currentProcess.stdout?.on('data', (data) => {
         const chunk = data.toString();
         stdout += chunk;
+        // リアルタイムでチャンクを送信
         this.emit('progress', {
           agentName,
-          chunk,
+          message: chunk, // AgentEvent.message として送信
         });
       });
 
