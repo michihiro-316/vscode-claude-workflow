@@ -201,15 +201,35 @@ export class WorkflowManager extends EventEmitter {
    * PMエージェント用のプロンプトを構築
    */
   private buildPMPrompt(task: UserTask): string {
-    let prompt = `あなたは .claude/agents/pm-agent.md で定義されたPMエージェントとして動作してください。\n\n`;
-    prompt += `以下のタスクについて実装計画を立案してください：\n\n`;
+    let prompt = `以下のタスクについて実装計画を立案してください：\n\n`;
     prompt += `**ユーザーのタスク**: ${task.description}\n\n`;
 
     if (task.context) {
       prompt += `**コンテキスト**:\n${task.context}\n\n`;
     }
 
-    prompt += `pm-agent.md に記載された形式に従って、JSON形式で実装計画を返してください。`;
+    prompt += `\n**重要**: 必ず以下のJSON形式のみで返してください。説明文やマークダウンは含めず、純粋なJSONのみを出力してください：\n\n`;
+    prompt += `\`\`\`json\n`;
+    prompt += `{\n`;
+    prompt += `  "requirements": ["要件1", "要件2"],\n`;
+    prompt += `  "implementationPlan": {\n`;
+    prompt += `    "tasks": [\n`;
+    prompt += `      {\n`;
+    prompt += `        "id": "task-1",\n`;
+    prompt += `        "description": "タスクの説明",\n`;
+    prompt += `        "priority": "high",\n`;
+    prompt += `        "estimatedEffort": "小",\n`;
+    prompt += `        "dependencies": [],\n`;
+    prompt += `        "files": ["ファイルパス"]\n`;
+    prompt += `      }\n`;
+    prompt += `    ],\n`;
+    prompt += `    "estimatedComplexity": 5,\n`;
+    prompt += `    "risks": ["リスク1"]\n`;
+    prompt += `  },\n`;
+    prompt += `  "successCriteria": ["基準1"],\n`;
+    prompt += `  "notes": ["メモ1"]\n`;
+    prompt += `}\n`;
+    prompt += `\`\`\``;
 
     return prompt;
   }
@@ -254,14 +274,44 @@ export class WorkflowManager extends EventEmitter {
    * PMエージェントの出力をパース
    */
   private parsePMOutput(output: string): PMOutput {
-    // JSONブロックを抽出
-    const jsonMatch = output.match(/```json\s*([\s\S]*?)\s*```/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[1]);
-    }
+    try {
+      // JSONブロックを抽出
+      const jsonMatch = output.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[1]);
+      }
 
-    // JSONブロックがない場合は全体をパース
-    return JSON.parse(output);
+      // JSONブロックがない場合は全体をパース
+      return JSON.parse(output);
+    } catch (error) {
+      // JSONパースに失敗した場合、デフォルト構造を返す
+      console.error('Failed to parse PM output as JSON:', error);
+      console.error('Raw output:', output);
+
+      // テキスト出力からダミーのPMOutputを生成
+      return {
+        requirements: ['タスクの分析結果（JSON形式で返されませんでした）'],
+        implementationPlan: {
+          tasks: [
+            {
+              id: 'task-1',
+              description: output.substring(0, 200), // 最初の200文字を使用
+              priority: 'high',
+              estimatedEffort: '小',
+              dependencies: [],
+              files: [],
+            },
+          ],
+          estimatedComplexity: 5,
+          risks: [],
+        },
+        successCriteria: ['実装が完了すること'],
+        notes: [
+          'エージェントがJSON形式で応答しませんでした',
+          '生のテキスト出力を確認してください',
+        ],
+      };
+    }
   }
 
   /**
