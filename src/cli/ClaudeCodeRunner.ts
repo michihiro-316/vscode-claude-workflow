@@ -160,6 +160,10 @@ export class ClaudeCodeRunner extends EventEmitter {
       const args = [
         '--print', // 非対話モードで出力を取得
         '--dangerously-skip-permissions', // 権限プロンプトをスキップ（プロジェクトディレクトリ内で安全）
+        '--allowedTools',
+        'Read,Glob,Grep,Write,Edit,Bash,Task', // 許可するツール
+        '--max-turns',
+        '10', // 最大ターン数を制限
         '--output-format',
         'text', // テキスト形式で出力
         fullPrompt,
@@ -167,6 +171,7 @@ export class ClaudeCodeRunner extends EventEmitter {
 
       this.currentProcess = spawn(this.claudeCliPath, args, {
         cwd: this.projectRoot,
+        stdio: ['ignore', 'pipe', 'pipe'], // stdin を無視、stdout/stderr をパイプ
         env: {
           ...process.env,
           // Homebrew の bin ディレクトリを PATH に追加
