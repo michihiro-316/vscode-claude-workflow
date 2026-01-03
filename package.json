@@ -34,7 +34,7 @@
         {
           "id": "claude-workflow",
           "title": "Claude Workflow",
-          "icon": "resources/icons/workflow.svg"
+          "icon": "$(robot)"
         }
       ]
     },
