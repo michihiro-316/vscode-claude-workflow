@@ -154,12 +154,14 @@ export class ClaudeCodeRunner extends EventEmitter {
       }
 
       // Claude Code CLI を実行
-      // 実際のコマンドは: claude --agent <agentName> --print "<prompt>"
+      // サブエージェントを明示的に呼び出す
+      // 実際のコマンドは: claude --print "Use the <agentName> subagent to: <prompt>"
+      const fullPrompt = `Use the ${agentName} subagent to: ${prompt}`;
       const args = [
-        '--agent',
-        agentName,
         '--print', // 非対話モードで出力を取得
-        prompt,
+        '--output-format',
+        'text', // テキスト形式で出力
+        fullPrompt,
       ];
 
       this.currentProcess = spawn(this.claudeCliPath, args, {

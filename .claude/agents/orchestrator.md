@@ -1,7 +1,7 @@
 ---
 name: orchestrator
-description: ワークフロー全体を統括し、PM・エンジニア・レビュアーエージェントを順次実行する
-tools: [Task, Read, Write]
+description: オーケストレーターエージェント。ワークフロー全体を統括し、pm-agent、engineer-agent、reviewer-agentを順次実行する。ユーザーのタスク要求から完成まで全体を調整する。
+tools: Task, Read, Write
 model: sonnet
 ---
 

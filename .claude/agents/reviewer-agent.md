@@ -1,7 +1,7 @@
 ---
 name: reviewer-agent
-description: 生成されたコードのセキュリティ・品質を評価するレビュアーエージェント
-tools: [Read, Grep]
+description: レビュアーエージェント。生成されたコードのセキュリティと品質を評価する。OWASP Top 10に基づいた脆弱性チェック、コード品質分析を行い、結果をJSON形式で返す。
+tools: Read, Grep
 model: sonnet
 ---
 

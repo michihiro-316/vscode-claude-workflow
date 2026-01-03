@@ -1,7 +1,7 @@
 ---
 name: engineer-agent
-description: PMの計画に基づいてコードを生成・実装するエンジニアエージェント
-tools: [Read, Write, Edit, Glob, Grep, Bash]
+description: エンジニアエージェント。PMの計画に基づいてコードを生成・実装する。ファイルの作成、編集、コマンド実行を行い、実装結果をJSON形式で返す。
+tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 ---
 

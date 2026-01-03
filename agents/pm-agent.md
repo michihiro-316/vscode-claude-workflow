@@ -1,7 +1,7 @@
 ---
 name: pm-agent
-description: タスクを分析し、詳細な実装計画を立案するプロジェクトマネージャーエージェント
-tools: [Read, Glob, Grep]
+description: プロジェクトマネージャーエージェント。タスク要件を分析し、詳細な実装計画を立案する。コードベースを調査して構造化されたJSON形式の計画を作成する。
+tools: Read, Glob, Grep
 model: sonnet
 ---
 
