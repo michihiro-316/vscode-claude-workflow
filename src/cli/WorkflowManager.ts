@@ -262,11 +262,17 @@ export class WorkflowManager extends EventEmitter {
       prompt += `- ${file.path} (${file.action}): ${file.summary}\n`;
     });
 
-    prompt += `\nreviewer-agent.md に記載された形式に従って、以下をチェックしてください：\n`;
-    prompt += `1. セキュリティ脆弱性（OWASP Top 10）\n`;
-    prompt += `2. コード品質（可読性、保守性、パフォーマンス）\n`;
-    prompt += `3. ベストプラクティス遵守\n`;
-    prompt += `4. JSON形式で結果を返す`;
+    prompt += `\n**重要**: 必ず以下のJSON形式のみで返してください。説明文やマークダウンは含めず、純粋なJSONのみを出力してください：\n\n`;
+    prompt += `\`\`\`json\n`;
+    prompt += `{\n`;
+    prompt += `  "securityIssues": [],\n`;
+    prompt += `  "qualityIssues": [],\n`;
+    prompt += `  "bestPractices": [],\n`;
+    prompt += `  "overallScore": 85,\n`;
+    prompt += `  "approved": true,\n`;
+    prompt += `  "summary": "全体的な評価のサマリー"\n`;
+    prompt += `}\n`;
+    prompt += `\`\`\``;
 
     return prompt;
   }

@@ -39,6 +39,24 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri],
     };
 
+    // Webview が visible になったときに状態を復元
+    webviewView.onDidChangeVisibility(() => {
+      if (webviewView.visible && this._workflowManager) {
+        // 現在の状態を再送信
+        const currentResult = this._workflowManager.getResult();
+        if (currentResult.pmOutput) {
+          this._postMessage({
+            type: 'pmPlan',
+            plan: currentResult.pmOutput,
+          });
+        }
+        this._postMessage({
+          type: 'statusChange',
+          status: this._workflowManager.getStatus(),
+        });
+      }
+    });
+
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
     // Webviewからのメッセージを処理
@@ -432,7 +450,22 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         function addLog(event) {
             const entry = document.createElement('div');
             entry.className = 'log-entry';
-            entry.textContent = \`[\${event.agentType}] \${event.message}\`;
+
+            // progress イベントの場合は最後のエントリを更新
+            if (event.type === 'progress') {
+                const lastEntry = log.querySelector('.log-entry:last-child');
+                if (lastEntry && lastEntry.textContent.startsWith(\`[\${event.agentType}]\`)) {
+                    // 既存のエントリに追記
+                    lastEntry.textContent += event.message;
+                    log.scrollTop = log.scrollHeight;
+                    return;
+                } else {
+                    entry.textContent = \`[\${event.agentType}] \${event.message}\`;
+                }
+            } else {
+                entry.textContent = \`[\${event.agentType}] \${event.message}\`;
+            }
+
             log.appendChild(entry);
             log.scrollTop = log.scrollHeight;
         }
