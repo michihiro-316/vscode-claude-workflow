@@ -126,8 +126,15 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
       : {
           description: taskData.description,
           purpose: taskData.purpose,
-          techStack: taskData.techStack,
-          backend: taskData.backend,
+          frontendFramework: taskData.frontendFramework,
+          frontendLanguage: taskData.frontendLanguage,
+          backendFramework: taskData.backendFramework,
+          backendLanguage: taskData.backendLanguage,
+          database: taskData.database,
+          cloudProvider: taskData.cloudProvider,
+          infrastructure: taskData.infrastructure,
+          authentication: taskData.authentication,
+          security: taskData.security,
           constraints: taskData.constraints,
           other: taskData.other,
         };
@@ -380,31 +387,71 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         </div>
 
         <details>
-            <summary>🔧 詳細設定（任意）</summary>
+            <summary>🔧 詳細設定（任意）- 開発現場で使える実践的な設定</summary>
             <div class="input-grid" style="margin-top: 10px;">
                 <div class="input-group">
                     <label for="purpose-input">🎯 目的・背景：</label>
-                    <textarea id="purpose-input" style="min-height: 60px;" placeholder="なぜこの機能が必要か、どのような課題を解決するか"></textarea>
+                    <textarea id="purpose-input" style="min-height: 60px;" placeholder="なぜこの機能が必要か、どのような課題を解決するか、ビジネス価値は何か"></textarea>
+                </div>
+
+                <h4 style="margin: 15px 0 5px 0; color: var(--vscode-charts-blue);">📱 フロントエンド</h4>
+                <div class="input-group">
+                    <label for="frontend-framework-input">フレームワーク：</label>
+                    <input type="text" id="frontend-framework-input" placeholder="例：React, Vue.js, Next.js, Angular, Svelte">
                 </div>
 
                 <div class="input-group">
-                    <label for="tech-stack-input">💻 技術スタック：</label>
-                    <input type="text" id="tech-stack-input" placeholder="例：Python, FastAPI, PostgreSQL">
+                    <label for="frontend-language-input">言語：</label>
+                    <input type="text" id="frontend-language-input" placeholder="例：TypeScript, JavaScript (ES6+)">
+                </div>
+
+                <h4 style="margin: 15px 0 5px 0; color: var(--vscode-charts-green);">🗄️ バックエンド</h4>
+                <div class="input-group">
+                    <label for="backend-framework-input">フレームワーク：</label>
+                    <input type="text" id="backend-framework-input" placeholder="例：Express, FastAPI, Django, Spring Boot, NestJS, Flask">
                 </div>
 
                 <div class="input-group">
-                    <label for="backend-input">🗄️ バックエンド・インフラ：</label>
-                    <input type="text" id="backend-input" placeholder="例：AWS Lambda, Docker, Redis">
+                    <label for="backend-language-input">言語：</label>
+                    <input type="text" id="backend-language-input" placeholder="例：Node.js, Python, Java, Go, Ruby">
                 </div>
 
                 <div class="input-group">
-                    <label for="constraints-input">⚠️ 制約・注意事項：</label>
-                    <textarea id="constraints-input" style="min-height: 60px;" placeholder="例：既存のAPIとの互換性を保つ、パフォーマンス要件など"></textarea>
+                    <label for="database-input">データベース：</label>
+                    <input type="text" id="database-input" placeholder="例：PostgreSQL, MySQL, MongoDB, Redis, Firestore">
+                </div>
+
+                <h4 style="margin: 15px 0 5px 0; color: var(--vscode-charts-purple);">☁️ インフラ・クラウド</h4>
+                <div class="input-group">
+                    <label for="cloud-provider-input">クラウドプロバイダー：</label>
+                    <input type="text" id="cloud-provider-input" placeholder="例：AWS, GCP, Azure, Vercel, Netlify, Railway">
                 </div>
 
                 <div class="input-group">
-                    <label for="other-input">📌 その他の要望：</label>
-                    <textarea id="other-input" style="min-height: 60px;" placeholder="その他、エージェントに伝えたいこと"></textarea>
+                    <label for="infrastructure-input">インフラツール：</label>
+                    <input type="text" id="infrastructure-input" placeholder="例：Docker, Kubernetes, Serverless, Terraform, Cloud Run">
+                </div>
+
+                <h4 style="margin: 15px 0 5px 0; color: var(--vscode-charts-orange);">🔐 認証・セキュリティ</h4>
+                <div class="input-group">
+                    <label for="authentication-input">認証方法：</label>
+                    <input type="text" id="authentication-input" placeholder="例：JWT, OAuth2, Firebase Auth, Auth0, Supabase Auth, Cognito">
+                </div>
+
+                <div class="input-group">
+                    <label for="security-input">セキュリティ要件：</label>
+                    <input type="text" id="security-input" placeholder="例：HTTPS必須, CORS設定, CSP, XSS対策, SQL Injection対策">
+                </div>
+
+                <h4 style="margin: 15px 0 5px 0; color: var(--vscode-charts-red);">⚠️ その他</h4>
+                <div class="input-group">
+                    <label for="constraints-input">制約・注意事項：</label>
+                    <textarea id="constraints-input" style="min-height: 60px;" placeholder="例：既存APIとの互換性、レスポンスタイム200ms以下、IE11サポート不要"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="other-input">その他の要望：</label>
+                    <textarea id="other-input" style="min-height: 60px;" placeholder="テストカバレッジ、CI/CD、コーディング規約、ドキュメント要件など"></textarea>
                 </div>
             </div>
         </details>
@@ -434,8 +481,15 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
 
         const taskInput = document.getElementById('task-input');
         const purposeInput = document.getElementById('purpose-input');
-        const techStackInput = document.getElementById('tech-stack-input');
-        const backendInput = document.getElementById('backend-input');
+        const frontendFrameworkInput = document.getElementById('frontend-framework-input');
+        const frontendLanguageInput = document.getElementById('frontend-language-input');
+        const backendFrameworkInput = document.getElementById('backend-framework-input');
+        const backendLanguageInput = document.getElementById('backend-language-input');
+        const databaseInput = document.getElementById('database-input');
+        const cloudProviderInput = document.getElementById('cloud-provider-input');
+        const infrastructureInput = document.getElementById('infrastructure-input');
+        const authenticationInput = document.getElementById('authentication-input');
+        const securityInput = document.getElementById('security-input');
         const constraintsInput = document.getElementById('constraints-input');
         const otherInput = document.getElementById('other-input');
         const startBtn = document.getElementById('start-btn');
@@ -454,8 +508,15 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         if (previousState) {
             taskInput.value = previousState.taskInput || '';
             purposeInput.value = previousState.purposeInput || '';
-            techStackInput.value = previousState.techStackInput || '';
-            backendInput.value = previousState.backendInput || '';
+            frontendFrameworkInput.value = previousState.frontendFrameworkInput || '';
+            frontendLanguageInput.value = previousState.frontendLanguageInput || '';
+            backendFrameworkInput.value = previousState.backendFrameworkInput || '';
+            backendLanguageInput.value = previousState.backendLanguageInput || '';
+            databaseInput.value = previousState.databaseInput || '';
+            cloudProviderInput.value = previousState.cloudProviderInput || '';
+            infrastructureInput.value = previousState.infrastructureInput || '';
+            authenticationInput.value = previousState.authenticationInput || '';
+            securityInput.value = previousState.securityInput || '';
             constraintsInput.value = previousState.constraintsInput || '';
             otherInput.value = previousState.otherInput || '';
 
@@ -472,8 +533,15 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
                 ...state,
                 taskInput: taskInput.value,
                 purposeInput: purposeInput.value,
-                techStackInput: techStackInput.value,
-                backendInput: backendInput.value,
+                frontendFrameworkInput: frontendFrameworkInput.value,
+                frontendLanguageInput: frontendLanguageInput.value,
+                backendFrameworkInput: backendFrameworkInput.value,
+                backendLanguageInput: backendLanguageInput.value,
+                databaseInput: databaseInput.value,
+                cloudProviderInput: cloudProviderInput.value,
+                infrastructureInput: infrastructureInput.value,
+                authenticationInput: authenticationInput.value,
+                securityInput: securityInput.value,
                 constraintsInput: constraintsInput.value,
                 otherInput: otherInput.value,
             });
@@ -481,8 +549,15 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
 
         taskInput.addEventListener('input', saveInputState);
         purposeInput.addEventListener('input', saveInputState);
-        techStackInput.addEventListener('input', saveInputState);
-        backendInput.addEventListener('input', saveInputState);
+        frontendFrameworkInput.addEventListener('input', saveInputState);
+        frontendLanguageInput.addEventListener('input', saveInputState);
+        backendFrameworkInput.addEventListener('input', saveInputState);
+        backendLanguageInput.addEventListener('input', saveInputState);
+        databaseInput.addEventListener('input', saveInputState);
+        cloudProviderInput.addEventListener('input', saveInputState);
+        infrastructureInput.addEventListener('input', saveInputState);
+        authenticationInput.addEventListener('input', saveInputState);
+        securityInput.addEventListener('input', saveInputState);
         constraintsInput.addEventListener('input', saveInputState);
         otherInput.addEventListener('input', saveInputState);
 
@@ -498,8 +573,15 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
             const taskDetails = {
                 description: task,
                 purpose: purposeInput.value.trim(),
-                techStack: techStackInput.value.trim(),
-                backend: backendInput.value.trim(),
+                frontendFramework: frontendFrameworkInput.value.trim(),
+                frontendLanguage: frontendLanguageInput.value.trim(),
+                backendFramework: backendFrameworkInput.value.trim(),
+                backendLanguage: backendLanguageInput.value.trim(),
+                database: databaseInput.value.trim(),
+                cloudProvider: cloudProviderInput.value.trim(),
+                infrastructure: infrastructureInput.value.trim(),
+                authentication: authenticationInput.value.trim(),
+                security: securityInput.value.trim(),
                 constraints: constraintsInput.value.trim(),
                 other: otherInput.value.trim(),
             };

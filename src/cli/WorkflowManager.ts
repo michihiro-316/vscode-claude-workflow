@@ -209,12 +209,40 @@ export class WorkflowManager extends EventEmitter {
     if (task.purpose) {
       prompt += `**目的・背景**: ${task.purpose}\n\n`;
     }
-    if (task.techStack) {
-      prompt += `**技術スタック**: ${task.techStack}\n\n`;
+
+    // フロントエンド
+    if (task.frontendFramework || task.frontendLanguage) {
+      prompt += `**フロントエンド技術**:\n`;
+      if (task.frontendFramework) prompt += `- フレームワーク: ${task.frontendFramework}\n`;
+      if (task.frontendLanguage) prompt += `- 言語: ${task.frontendLanguage}\n`;
+      prompt += `\n`;
     }
-    if (task.backend) {
-      prompt += `**バックエンド・インフラ**: ${task.backend}\n\n`;
+
+    // バックエンド
+    if (task.backendFramework || task.backendLanguage || task.database) {
+      prompt += `**バックエンド技術**:\n`;
+      if (task.backendFramework) prompt += `- フレームワーク: ${task.backendFramework}\n`;
+      if (task.backendLanguage) prompt += `- 言語: ${task.backendLanguage}\n`;
+      if (task.database) prompt += `- データベース: ${task.database}\n`;
+      prompt += `\n`;
     }
+
+    // インフラ・クラウド
+    if (task.cloudProvider || task.infrastructure) {
+      prompt += `**インフラ・クラウド**:\n`;
+      if (task.cloudProvider) prompt += `- クラウドプロバイダー: ${task.cloudProvider}\n`;
+      if (task.infrastructure) prompt += `- インフラツール: ${task.infrastructure}\n`;
+      prompt += `\n`;
+    }
+
+    // 認証・セキュリティ
+    if (task.authentication || task.security) {
+      prompt += `**認証・セキュリティ**:\n`;
+      if (task.authentication) prompt += `- 認証方法: ${task.authentication}\n`;
+      if (task.security) prompt += `- セキュリティ要件: ${task.security}\n`;
+      prompt += `\n`;
+    }
+
     if (task.constraints) {
       prompt += `**制約・注意事項**: ${task.constraints}\n\n`;
     }

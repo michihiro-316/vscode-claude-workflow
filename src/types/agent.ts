@@ -179,8 +179,20 @@ export interface UserTask {
   presetType?: 'feature' | 'bugfix' | 'security' | 'refactor'; // プリセットタスクの種類
   // 詳細設定（任意）
   purpose?: string; // 目的・背景
-  techStack?: string; // 技術スタック
-  backend?: string; // バックエンド・インフラ
+  // フロントエンド
+  frontendFramework?: string; // フロントエンドフレームワーク (React, Vue.js, Angular, Next.js等)
+  frontendLanguage?: string; // フロントエンド言語 (TypeScript, JavaScript等)
+  // バックエンド
+  backendFramework?: string; // バックエンドフレームワーク (Express, FastAPI, Django, Spring Boot等)
+  backendLanguage?: string; // バックエンド言語 (Node.js, Python, Java, Go等)
+  database?: string; // データベース (PostgreSQL, MySQL, MongoDB, Redis等)
+  // インフラ・クラウド
+  cloudProvider?: string; // クラウドプロバイダー (AWS, GCP, Azure等)
+  infrastructure?: string; // インフラ (Docker, Kubernetes, Serverless等)
+  // 認証・セキュリティ
+  authentication?: string; // 認証方法 (JWT, OAuth2, Firebase Auth, Auth0等)
+  security?: string; // セキュリティ要件 (HTTPS, CORS, CSP等)
+  // その他
   constraints?: string; // 制約・注意事項
   other?: string; // その他の要望
 }
