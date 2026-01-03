@@ -4,9 +4,12 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![VSCode](https://img.shields.io/badge/VSCode-1.85%2B-blue)](https://code.visualstudio.com/)
-[![Claude](https://img.shields.io/badge/Claude-Opus%204.5%20%7C%20Sonnet%204.5-purple)](https://www.anthropic.com/claude)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-CLI-purple)](https://code.claude.com/)
+[![Claude Plan](https://img.shields.io/badge/Claude-Pro%20%7C%205MAX%20%7C%2010MAX-orange)](https://www.anthropic.com/claude)
 
 > 🤖 PM、エンジニア、レビュアーのAIエージェントがステップバイステップで協力し、ソフトウェア開発をサポートします
+>
+> ⚠️ **Claude Code CLI統合版**: Claude Pro / 5MAX / 10MAXプランで利用可能（追加課金なし）
 
 ## 📋 目次
 
@@ -33,11 +36,13 @@
 
 ### なぜ vscode-claude-workflow なのか？
 
+- ✅ **コスト効率**: Claude Pro/5MAX/10MAXプランで追加課金なし
 - ✅ **日本語完全対応**: すべてのインターフェースとメッセージが日本語
 - ✅ **初心者にも優しい**: プリセットタスクで簡単に開始
 - ✅ **段階的な確認**: 各ステップでユーザーが承認・修正可能
 - ✅ **高品質なコード**: セキュリティとベストプラクティスを自動チェック
 - ✅ **透明性の高いプロセス**: 各エージェントの思考過程を可視化
+- ✅ **チーム共有**: エージェント定義ファイル（.claude/agents/）をGitで共有可能
 
 ## 主な機能
 
@@ -92,21 +97,40 @@
 
 ### 前提条件
 
-- **VSCode**: バージョン 1.85 以上
-- **Node.js**: バージョン 18 以上（開発時のみ）
-- **Claude API キー**: [Anthropic](https://www.anthropic.com/) から取得
+⚠️ **重要**: 以下が必須です
 
-### 方法1: VSCode Marketplace から（将来的に対応予定）
+1. **VSCode**: バージョン 1.85 以上
+2. **Claude Code CLI**: インストール済みであること
+3. **Claude プラン**: Pro / 5MAX / 10MAX いずれかに加入
+4. **Node.js**: バージョン 18 以上（開発時のみ）
+
+### ステップ1: Claude Code CLIのインストール
+
+まだインストールしていない場合：
+
+```bash
+# macOS/Linux
+npm install -g @anthropic-ai/claude-code
+
+# または Homebrewで
+brew install anthropic/tap/claude-code
+```
+
+詳細: https://code.claude.com/docs/en/installation
+
+### ステップ2: VSCode拡張のインストール
+
+#### 方法1: VSCode Marketplace から（将来的に対応予定）
 
 ```bash
 # VSCode 拡張機能検索で "Claude Workflow" を検索してインストール
 ```
 
-### 方法2: ソースからビルド（現在）
+#### 方法2: ソースからビルド（現在）
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/your-username/vscode-claude-workflow.git
+git clone https://github.com/michihiro-316/vscode-claude-workflow.git
 cd vscode-claude-workflow
 
 # 依存関係をインストール
@@ -119,14 +143,14 @@ npm run compile
 # F5キーを押して拡張開発ホストを起動
 ```
 
-### 初回セットアップ
+### ステップ3: 初回セットアップ
 
 1. VSCodeで拡張機能を有効化
-2. コマンドパレット（`Cmd/Ctrl + Shift + P`）を開く
-3. `Claude Workflow: APIキーを設定` を実行
-4. Claude APIキーを入力
+2. プロジェクトフォルダを開く
+3. 拡張が `.claude/agents/` ディレクトリを自動作成
+4. エージェント定義ファイルが自動生成される
 
-APIキーは VSCode の Secret Storage に安全に保存されます。
+**APIキーは不要です**（Claude Code CLIの認証を使用）
 
 ## 使い方
 
@@ -232,58 +256,63 @@ export async function authenticateUser(
 
 ## アーキテクチャ
 
-### システム構成
+### システム構成（Claude Code統合版）
 
 ```
-┌─────────────────────────────────────┐
-│         VSCode Extension            │
-│  ┌─────────────────────────────┐   │
-│  │   Webview UI (日本語)       │   │
-│  └─────────────────────────────┘   │
-│              ↕                      │
-│  ┌─────────────────────────────┐   │
-│  │   Orchestrator Agent        │   │
-│  │   ┌─────────────────────┐   │   │
-│  │   │  PM Agent           │   │   │
-│  │   └─────────────────────┘   │   │
-│  │   ┌─────────────────────┐   │   │
-│  │   │  Engineer Agent     │   │   │
-│  │   └─────────────────────┘   │   │
-│  │   ┌─────────────────────┐   │   │
-│  │   │  Reviewer Agent     │   │   │
-│  │   └─────────────────────┘   │   │
-│  └─────────────────────────────┘   │
-│              ↕                      │
-│  ┌─────────────────────────────┐   │
-│  │    Claude API Client        │   │
-│  └─────────────────────────────┘   │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│         VSCode Extension (TypeScript)       │
+│  ┌─────────────────────────────────────┐   │
+│  │   Webview UI (日本語)               │   │
+│  └─────────────────────────────────────┘   │
+│              ↕                              │
+│  ┌─────────────────────────────────────┐   │
+│  │   ClaudeCodeRunner (CLI Wrapper)    │   │
+│  │   WorkflowManager                    │   │
+│  └─────────────────────────────────────┘   │
+└─────────────────────────────────────────────┘
+              ↕ child_process.spawn
+┌─────────────────────────────────────────────┐
+│         Claude Code CLI                     │
+│  ┌─────────────────────────────────────┐   │
+│  │   Task Tool でサブエージェント実行   │   │
+│  └─────────────────────────────────────┘   │
+└─────────────────────────────────────────────┘
               ↕
-    ┌─────────────────────┐
-    │   Claude API        │
-    │ (Opus 4.5/Sonnet 4.5)│
-    └─────────────────────┘
+┌─────────────────────────────────────────────┐
+│   .claude/agents/ (エージェント定義)        │
+│  ├── orchestrator.md  ← ワークフロー統括    │
+│  ├── pm-agent.md      ← 計画立案            │
+│  ├── engineer-agent.md ← コード生成         │
+│  └── reviewer-agent.md ← 品質チェック       │
+└─────────────────────────────────────────────┘
+              ↕
+    ┌──────────────────────────┐
+    │   Claude (Pro/5MAX/10MAX) │
+    └──────────────────────────┘
 ```
 
 ### 技術スタック
 
 - **フロントエンド**: TypeScript, VSCode Webview API
-- **エージェント**: Claude Agent SDK
-- **AI モデル**: Claude Opus 4.5 / Sonnet 4.5
-- **API**: Anthropic Claude API
+- **CLI統合**: Node.js child_process
+- **エージェント定義**: Markdown (.claude/agents/*.md)
+- **実行環境**: Claude Code CLI
+- **Claude プラン**: Pro / 5MAX / 10MAX（追加課金なし）
 
 ### ディレクトリ構造
 
 ```
 vscode-claude-workflow/
+├── .claude/                 # Claude Code設定
+│   └── agents/              # エージェント定義（Markdown）
+│       ├── orchestrator.md  # ワークフロー統括
+│       ├── pm-agent.md      # 計画立案
+│       ├── engineer-agent.md # コード生成
+│       └── reviewer-agent.md # 品質チェック
 ├── src/
-│   ├── agents/              # エージェント実装
-│   │   ├── base/
-│   │   ├── orchestrator/
-│   │   ├── pm/
-│   │   ├── engineer/
-│   │   └── reviewer/
-│   ├── claude/              # Claude API統合
+│   ├── cli/                 # Claude Code CLI統合
+│   │   ├── ClaudeCodeRunner.ts
+│   │   └── WorkflowManager.ts
 │   ├── extension/           # VSCode拡張
 │   │   ├── ui/
 │   │   └── commands/
@@ -326,19 +355,20 @@ npm run format
 詳細な開発情報は以下を参照：
 
 - [開発ガイド (claude.md)](docs/claude.md)
-- [アーキテクチャ設計](docs/ARCHITECTURE.md)
-- [実装計画](IMPLEMENTATION_PLAN.md)
-- [要件定義](REQUIREMENTS.md)
+- [実装計画 (Claude Code統合版)](IMPLEMENTATION_PLAN_CLAUDE_CODE.md)
+- [要件定義 (v2.0)](REQUIREMENTS.md)
+- [プロジェクト構成](PROJECT_STRUCTURE.md)
 
 ## ロードマップ
 
-### Phase 1: MVP（現在）
+### Phase 1: MVP（現在 - Claude Code統合版）
 
-- [x] オーケストレーター、PM、エンジニア、レビュアーの4エージェント
-- [x] 基本的なVSCode UI
-- [x] 順次実行フロー
-- [x] 日本語プロンプト入力
-- [ ] プロトタイプ実装中
+- [x] Claude Code CLI統合アーキテクチャ設計
+- [x] 4つのエージェント定義（.claude/agents/*.md）
+- [ ] ClaudeCodeRunner実装
+- [ ] WorkflowManager実装
+- [ ] 基本的なVSCode UI
+- [ ] E2Eテスト
 
 ### Phase 2: 機能拡張（計画中）
 
@@ -362,7 +392,7 @@ npm run format
 
 ### バグ報告・機能リクエスト
 
-[Issue](https://github.com/your-username/vscode-claude-workflow/issues) を作成してください。
+[Issue](https://github.com/michihiro-316/vscode-claude-workflow/issues) を作成してください。
 
 ### プルリクエスト
 
@@ -385,20 +415,22 @@ npm run format
 
 ## 謝辞
 
-- [Anthropic](https://www.anthropic.com/) - Claude APIの提供
+- [Anthropic](https://www.anthropic.com/) - Claude と Claude Code の提供
 - [VSCode](https://code.visualstudio.com/) - 優れた拡張機能プラットフォーム
 - すべての貢献者の皆様
 
 ## 関連リンク
 
-- [Claude API Documentation](https://docs.anthropic.com/)
-- [Claude Agent SDK](https://platform.claude.com/docs/en/agent-sdk/overview)
+- [Claude Code Documentation](https://code.claude.com/docs)
+- [Claude Code CLI](https://code.claude.com/docs/en/installation)
 - [VSCode Extension API](https://code.visualstudio.com/api)
+- [Claude プラン](https://www.anthropic.com/claude)
 
 ---
 
 **作成**: 2026-01-03
 **作成者**: vscode-claude-workflow チーム
-**サポート**: [GitHub Issues](https://github.com/your-username/vscode-claude-workflow/issues)
+**バージョン**: 2.0（Claude Code統合版）
+**サポート**: [GitHub Issues](https://github.com/michihiro-316/vscode-claude-workflow/issues)
 
 ⭐ このプロジェクトが役に立ったら、GitHubでスターをお願いします！
