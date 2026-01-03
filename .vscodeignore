@@ -14,6 +14,7 @@ node_modules/**
 docs/**
 test-agents.md
 .claude/**
+!agents/**
 IMPLEMENTATION_PLAN_CLAUDE_CODE.md
 PROJECT_STRUCTURE.md
 REQUIREMENTS.md

@@ -63,7 +63,7 @@ export function deactivate(): void {
 
 /**
  * .claude/agents/ ディレクトリが存在することを確認
- * 存在しない場合は、エージェント定義ファイルをコピー
+ * 存在しない場合は、拡張内のテンプレートから自動的にコピー
  */
 async function ensureAgentsDirectory(): Promise<void> {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -83,10 +83,51 @@ async function ensureAgentsDirectory(): Promise<void> {
     // ディレクトリが既に存在する
     console.log('.claude/agents/ directory already exists');
   } catch {
-    // ディレクトリが存在しない場合は通知のみ
-    // （エージェント定義ファイルは既にリポジトリに含まれている前提）
-    vscode.window.showInformationMessage(
-      'Claude Workflow: .claude/agents/ ディレクトリを確認してください'
-    );
+    // ディレクトリが存在しない場合は自動セットアップ
+    try {
+      // .claude/agents/ ディレクトリを作成
+      await fs.createDirectory(agentsDir);
+
+      // 拡張内のテンプレートファイルをコピー
+      const extensionPath = vscode.extensions.getExtension(
+        'vscode-claude-workflow.vscode-claude-workflow'
+      )?.extensionUri;
+
+      if (!extensionPath) {
+        vscode.window.showErrorMessage(
+          'Claude Workflow: 拡張のパスが見つかりませんでした'
+        );
+        return;
+      }
+
+      const templateAgents = vscode.Uri.joinPath(extensionPath, 'agents');
+      const agentFiles = [
+        'orchestrator.md',
+        'pm-agent.md',
+        'engineer-agent.md',
+        'reviewer-agent.md',
+      ];
+
+      for (const fileName of agentFiles) {
+        const sourceUri = vscode.Uri.joinPath(templateAgents, fileName);
+        const targetUri = vscode.Uri.joinPath(agentsDir, fileName);
+
+        try {
+          const content = await fs.readFile(sourceUri);
+          await fs.writeFile(targetUri, content);
+        } catch (error) {
+          console.error(`Failed to copy ${fileName}:`, error);
+        }
+      }
+
+      vscode.window.showInformationMessage(
+        '✅ Claude Workflow のセットアップが完了しました！\n' +
+          '.claude/agents/ にエージェント定義ファイルを配置しました。'
+      );
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `Claude Workflow のセットアップに失敗しました: ${error}`
+      );
+    }
   }
 }
