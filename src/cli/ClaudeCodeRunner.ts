@@ -154,15 +154,18 @@ export class ClaudeCodeRunner extends EventEmitter {
       }
 
       // Claude Code CLI を実行
-      // 実際のコマンドは: claude --agent <agentName> "<prompt>"
-      const args = [prompt];
+      // 実際のコマンドは: claude --agent <agentName> --print "<prompt>"
+      const args = [
+        '--agent',
+        agentName,
+        '--print', // 非対話モードで出力を取得
+        prompt,
+      ];
 
       this.currentProcess = spawn(this.claudeCliPath, args, {
         cwd: this.projectRoot,
         env: {
           ...process.env,
-          // エージェント定義ファイルのパスを環境変数で渡す
-          CLAUDE_AGENT: agentName,
           // Homebrew の bin ディレクトリを PATH に追加
           PATH: `/opt/homebrew/bin:${process.env.PATH}`,
         },
