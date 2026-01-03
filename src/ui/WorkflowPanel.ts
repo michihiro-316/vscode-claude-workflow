@@ -78,6 +78,12 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         case 'stopWorkflow':
           this.stopWorkflow();
           break;
+        case 'editAgent':
+          await vscode.commands.executeCommand('claudeWorkflow.editAgent');
+          break;
+        case 'resetAgent':
+          await vscode.commands.executeCommand('claudeWorkflow.resetAgent');
+          break;
       }
     });
   }
@@ -458,6 +464,12 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
 
         <button id="start-btn">ワークフロー開始</button>
         <button id="stop-btn" disabled>停止</button>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--vscode-widget-border);">
+
+        <h3 style="font-size: 14px; margin-bottom: 10px;">⚙️ エージェント設定</h3>
+        <button id="edit-agent-btn" style="background-color: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground);">エージェント定義を編集</button>
+        <button id="reset-agent-btn" style="background-color: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground);">エージェント定義をリセット</button>
     </div>
 
     <div id="status-section" class="hidden">
@@ -631,6 +643,18 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
             planSection.classList.add('hidden');
             startBtn.disabled = false;
             stopBtn.disabled = true;
+        });
+
+        // エージェント定義編集
+        const editAgentBtn = document.getElementById('edit-agent-btn');
+        editAgentBtn.addEventListener('click', () => {
+            vscode.postMessage({ type: 'editAgent' });
+        });
+
+        // エージェント定義リセット
+        const resetAgentBtn = document.getElementById('reset-agent-btn');
+        resetAgentBtn.addEventListener('click', () => {
+            vscode.postMessage({ type: 'resetAgent' });
         });
 
         // メッセージ受信

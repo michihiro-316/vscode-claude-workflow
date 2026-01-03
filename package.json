@@ -55,6 +55,14 @@
       {
         "command": "claudeWorkflow.stop",
         "title": "Claude Workflow: ワークフローを停止"
+      },
+      {
+        "command": "claudeWorkflow.editAgent",
+        "title": "Claude Workflow: エージェント定義を編集"
+      },
+      {
+        "command": "claudeWorkflow.resetAgent",
+        "title": "Claude Workflow: エージェント定義をリセット"
       }
     ]
   },

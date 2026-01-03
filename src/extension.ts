@@ -48,7 +48,97 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   );
 
-  context.subscriptions.push(startCommand, stopCommand);
+  // コマンドの登録: エージェント定義を編集
+  const editAgentCommand = vscode.commands.registerCommand(
+    'claudeWorkflow.editAgent',
+    async () => {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      if (!workspaceFolder) {
+        vscode.window.showErrorMessage('ワークスペースが開かれていません');
+        return;
+      }
+
+      // エージェントを選択
+      const agentNames = ['pm-agent', 'engineer-agent', 'reviewer-agent', 'orchestrator'];
+      const selected = await vscode.window.showQuickPick(
+        agentNames.map(name => ({
+          label: name,
+          description: `${name}.md を編集`,
+        })),
+        {
+          placeHolder: '編集するエージェントを選択してください',
+        }
+      );
+
+      if (!selected) {
+        return;
+      }
+
+      // エージェント定義ファイルを開く
+      const agentFile = vscode.Uri.joinPath(
+        workspaceFolder.uri,
+        '.claude',
+        'agents',
+        `${selected.label}.md`
+      );
+
+      try {
+        const doc = await vscode.workspace.openTextDocument(agentFile);
+        await vscode.window.showTextDocument(doc);
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `エージェント定義ファイルを開けませんでした: ${error}`
+        );
+      }
+    }
+  );
+
+  // コマンドの登録: エージェント定義をリセット
+  const resetAgentCommand = vscode.commands.registerCommand(
+    'claudeWorkflow.resetAgent',
+    async () => {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      if (!workspaceFolder) {
+        vscode.window.showErrorMessage('ワークスペースが開かれていません');
+        return;
+      }
+
+      // エージェントを選択
+      const agentNames = ['pm-agent', 'engineer-agent', 'reviewer-agent', 'orchestrator', '全エージェント'];
+      const selected = await vscode.window.showQuickPick(
+        agentNames.map(name => ({
+          label: name,
+          description: name === '全エージェント' ? '全てのエージェント定義をリセット' : `${name}.md をデフォルトに戻す`,
+        })),
+        {
+          placeHolder: 'リセットするエージェントを選択してください',
+        }
+      );
+
+      if (!selected) {
+        return;
+      }
+
+      // 確認ダイアログ
+      const confirmed = await vscode.window.showWarningMessage(
+        `${selected.label} の定義をデフォルトに戻しますか？\n現在の設定は失われます。`,
+        { modal: true },
+        'リセット',
+        'キャンセル'
+      );
+
+      if (confirmed !== 'リセット') {
+        return;
+      }
+
+      // リセット実行
+      await resetAgentDefinitions(
+        selected.label === '全エージェント' ? agentNames.slice(0, 4) : [selected.label]
+      );
+    }
+  );
+
+  context.subscriptions.push(startCommand, stopCommand, editAgentCommand, resetAgentCommand);
 
   // .claude/agents/ ディレクトリの存在確認と作成
   ensureAgentsDirectory();
@@ -168,5 +258,58 @@ async function ensureAgentsDirectory(): Promise<void> {
         `Claude Workflow のセットアップに失敗しました: ${error}`
       );
     }
+  }
+}
+
+/**
+ * エージェント定義をデフォルトにリセット
+ *
+ * @param agentNames リセットするエージェント名のリスト
+ */
+async function resetAgentDefinitions(agentNames: string[]): Promise<void> {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    return;
+  }
+
+  const fs = vscode.workspace.fs;
+  const extensionPath = vscode.extensions.getExtension(
+    'vscode-claude-workflow.vscode-claude-workflow'
+  )?.extensionUri;
+
+  if (!extensionPath) {
+    vscode.window.showErrorMessage('拡張のパスが見つかりませんでした');
+    return;
+  }
+
+  const templateAgents = vscode.Uri.joinPath(extensionPath, 'agents');
+  const agentsDir = vscode.Uri.joinPath(workspaceFolder.uri, '.claude', 'agents');
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const agentName of agentNames) {
+    const fileName = `${agentName}.md`;
+    const sourceUri = vscode.Uri.joinPath(templateAgents, fileName);
+    const targetUri = vscode.Uri.joinPath(agentsDir, fileName);
+
+    try {
+      const content = await fs.readFile(sourceUri);
+      await fs.writeFile(targetUri, content);
+      successCount++;
+    } catch (error) {
+      console.error(`Failed to reset ${fileName}:`, error);
+      failCount++;
+    }
+  }
+
+  if (failCount === 0) {
+    vscode.window.showInformationMessage(
+      `✅ ${successCount}個のエージェント定義をリセットしました`
+    );
+  } else {
+    vscode.window.showWarningMessage(
+      `⚠️ ${successCount}個のエージェント定義をリセットしましたが、${failCount}個は失敗しました`
+    );
   }
 }
