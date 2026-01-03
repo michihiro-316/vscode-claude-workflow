@@ -155,10 +155,11 @@ export class ClaudeCodeRunner extends EventEmitter {
 
       // Claude Code CLI を実行
       // サブエージェントを明示的に呼び出す
-      // 実際のコマンドは: claude --print "Use the <agentName> subagent to: <prompt>"
+      // 実際のコマンドは: claude --print --dangerously-skip-permissions "Use the <agentName> subagent to: <prompt>"
       const fullPrompt = `Use the ${agentName} subagent to: ${prompt}`;
       const args = [
         '--print', // 非対話モードで出力を取得
+        '--dangerously-skip-permissions', // 権限プロンプトをスキップ（プロジェクトディレクトリ内で安全）
         '--output-format',
         'text', // テキスト形式で出力
         fullPrompt,
