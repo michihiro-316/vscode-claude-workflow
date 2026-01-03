@@ -205,6 +205,22 @@ export class WorkflowManager extends EventEmitter {
     let prompt = `以下のタスクについて実装計画を立案してください：\n\n`;
     prompt += `**ユーザーのタスク**: ${task.description}\n\n`;
 
+    // 詳細情報を追加
+    if (task.purpose) {
+      prompt += `**目的・背景**: ${task.purpose}\n\n`;
+    }
+    if (task.techStack) {
+      prompt += `**技術スタック**: ${task.techStack}\n\n`;
+    }
+    if (task.backend) {
+      prompt += `**バックエンド・インフラ**: ${task.backend}\n\n`;
+    }
+    if (task.constraints) {
+      prompt += `**制約・注意事項**: ${task.constraints}\n\n`;
+    }
+    if (task.other) {
+      prompt += `**その他の要望**: ${task.other}\n\n`;
+    }
     if (task.context) {
       prompt += `**コンテキスト**:\n${task.context}\n\n`;
     }

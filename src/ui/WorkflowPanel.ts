@@ -21,6 +21,8 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
   private _workflowManager?: WorkflowManager;
+  private _logHistory: AgentEvent[] = [];
+  private _currentStatus: WorkflowStatus = 'idle';
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -41,19 +43,24 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
 
     // Webview が visible になったときに状態を復元
     webviewView.onDidChangeVisibility(() => {
-      if (webviewView.visible && this._workflowManager) {
-        // 現在の状態を再送信
-        const currentResult = this._workflowManager.getResult();
-        if (currentResult.pmOutput) {
-          this._postMessage({
-            type: 'pmPlan',
-            plan: currentResult.pmOutput,
-          });
-        }
+      if (webviewView.visible) {
+        // ログ履歴を全て再送信
         this._postMessage({
-          type: 'statusChange',
-          status: this._workflowManager.getStatus(),
+          type: 'restoreState',
+          logs: this._logHistory,
+          status: this._currentStatus,
         });
+
+        // ワークフローマネージャーがある場合は計画も送信
+        if (this._workflowManager) {
+          const currentResult = this._workflowManager.getResult();
+          if (currentResult.pmOutput) {
+            this._postMessage({
+              type: 'pmPlan',
+              plan: currentResult.pmOutput,
+            });
+          }
+        }
       }
     });
 
@@ -78,7 +85,7 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
   /**
    * ワークフローを開始
    */
-  private async _handleStartWorkflow(taskDescription: string): Promise<void> {
+  private async _handleStartWorkflow(taskData: any): Promise<void> {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
       vscode.window.showErrorMessage(
@@ -87,6 +94,10 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
       return;
     }
 
+    // 前回のログをクリア
+    this._logHistory = [];
+    this._currentStatus = 'idle';
+
     // WorkflowManagerの初期化
     this._workflowManager = new WorkflowManager({
       projectRoot: workspaceFolder.uri.fsPath,
@@ -94,6 +105,7 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
 
     // イベントリスナーの設定
     this._workflowManager.on('statusChange', (status: WorkflowStatus) => {
+      this._currentStatus = status;
       this._postMessage({
         type: 'statusChange',
         status,
@@ -101,16 +113,24 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
     });
 
     this._workflowManager.on('agentEvent', (event: AgentEvent) => {
+      this._logHistory.push(event);
       this._postMessage({
         type: 'agentEvent',
         event,
       });
     });
 
-    // タスクの作成
-    const task: UserTask = {
-      description: taskDescription,
-    };
+    // タスクの作成（詳細情報を含む）
+    const task: UserTask = typeof taskData === 'string'
+      ? { description: taskData }
+      : {
+          description: taskData.description,
+          purpose: taskData.purpose,
+          techStack: taskData.techStack,
+          backend: taskData.backend,
+          constraints: taskData.constraints,
+          other: taskData.other,
+        };
 
     // ワークフローの実行（非同期）
     this._workflowManager
@@ -318,6 +338,36 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         .hidden {
             display: none;
         }
+
+        .input-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        details {
+            margin-bottom: 10px;
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: 500;
+            padding: 5px 0;
+            user-select: none;
+        }
+
+        summary:hover {
+            color: var(--vscode-charts-blue);
+        }
     </style>
 </head>
 <body>
@@ -325,9 +375,39 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
 
     <div id="input-section">
         <div class="input-group">
-            <label for="task-input">タスクを入力してください：</label>
+            <label for="task-input">📝 実現したいこと（必須）：</label>
             <textarea id="task-input" placeholder="例：ユーザー認証機能を追加してください"></textarea>
         </div>
+
+        <details>
+            <summary>🔧 詳細設定（任意）</summary>
+            <div class="input-grid" style="margin-top: 10px;">
+                <div class="input-group">
+                    <label for="purpose-input">🎯 目的・背景：</label>
+                    <textarea id="purpose-input" style="min-height: 60px;" placeholder="なぜこの機能が必要か、どのような課題を解決するか"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="tech-stack-input">💻 技術スタック：</label>
+                    <input type="text" id="tech-stack-input" placeholder="例：Python, FastAPI, PostgreSQL">
+                </div>
+
+                <div class="input-group">
+                    <label for="backend-input">🗄️ バックエンド・インフラ：</label>
+                    <input type="text" id="backend-input" placeholder="例：AWS Lambda, Docker, Redis">
+                </div>
+
+                <div class="input-group">
+                    <label for="constraints-input">⚠️ 制約・注意事項：</label>
+                    <textarea id="constraints-input" style="min-height: 60px;" placeholder="例：既存のAPIとの互換性を保つ、パフォーマンス要件など"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="other-input">📌 その他の要望：</label>
+                    <textarea id="other-input" style="min-height: 60px;" placeholder="その他、エージェントに伝えたいこと"></textarea>
+                </div>
+            </div>
+        </details>
 
         <button id="start-btn">ワークフロー開始</button>
         <button id="stop-btn" disabled>停止</button>
@@ -353,6 +433,11 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
         const vscode = acquireVsCodeApi();
 
         const taskInput = document.getElementById('task-input');
+        const purposeInput = document.getElementById('purpose-input');
+        const techStackInput = document.getElementById('tech-stack-input');
+        const backendInput = document.getElementById('backend-input');
+        const constraintsInput = document.getElementById('constraints-input');
+        const otherInput = document.getElementById('other-input');
         const startBtn = document.getElementById('start-btn');
         const stopBtn = document.getElementById('stop-btn');
         const statusSection = document.getElementById('status-section');
@@ -372,9 +457,19 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
                 return;
             }
 
+            // 詳細情報を収集
+            const taskDetails = {
+                description: task,
+                purpose: purposeInput.value.trim(),
+                techStack: techStackInput.value.trim(),
+                backend: backendInput.value.trim(),
+                constraints: constraintsInput.value.trim(),
+                other: otherInput.value.trim(),
+            };
+
             vscode.postMessage({
                 type: 'startWorkflow',
-                task: task
+                task: taskDetails
             });
 
             startBtn.disabled = true;
@@ -416,6 +511,16 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
             const message = event.data;
 
             switch (message.type) {
+                case 'restoreState':
+                    // 状態を復元
+                    updateStatus(message.status);
+                    log.innerHTML = '';
+                    message.logs.forEach(logEvent => addLog(logEvent));
+                    if (message.logs.length > 0) {
+                        logSection.classList.remove('hidden');
+                        statusSection.classList.remove('hidden');
+                    }
+                    break;
                 case 'statusChange':
                     updateStatus(message.status);
                     break;

@@ -177,6 +177,12 @@ export interface UserTask {
   description: string;
   context?: string; // 選択されたコードやファイル情報
   presetType?: 'feature' | 'bugfix' | 'security' | 'refactor'; // プリセットタスクの種類
+  // 詳細設定（任意）
+  purpose?: string; // 目的・背景
+  techStack?: string; // 技術スタック
+  backend?: string; // バックエンド・インフラ
+  constraints?: string; // 制約・注意事項
+  other?: string; // その他の要望
 }
 
 /**
