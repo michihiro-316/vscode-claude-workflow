@@ -1,0 +1,81 @@
+{
+  "name": "vscode-claude-workflow",
+  "displayName": "Claude Workflow",
+  "description": "複数のAIエージェントが協働する VSCode 開発支援システム",
+  "version": "0.1.0",
+  "publisher": "vscode-claude-workflow",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michihiro-316/vscode-claude-workflow.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=18.0.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "ai",
+    "claude",
+    "workflow",
+    "agent",
+    "japanese"
+  ],
+  "activationEvents": [
+    "onView:claudeWorkflowView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claude-workflow",
+          "title": "Claude Workflow",
+          "icon": "resources/icons/workflow.svg"
+        }
+      ]
+    },
+    "views": {
+      "claude-workflow": [
+        {
+          "type": "webview",
+          "id": "claudeWorkflowView",
+          "name": "ワークフロー"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "claudeWorkflow.start",
+        "title": "Claude Workflow: ワークフローを開始"
+      },
+      {
+        "command": "claudeWorkflow.stop",
+        "title": "Claude Workflow: ワークフローを停止"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "hello": "ts-node src/examples/hello-world.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/test-electron": "^2.3.8",
+    "eslint": "^8.56.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {}
+}
