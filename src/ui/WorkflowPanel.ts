@@ -24,6 +24,10 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
   private _logHistory: AgentEvent[] = [];
   private _currentStatus: WorkflowStatus = 'idle';
 
+  // コンテキスト最適化: ログサイズの制限
+  private readonly MAX_LOG_ENTRIES = 1000; // 最大1000エントリ
+  private readonly MAX_LOG_SIZE_BYTES = 500000; // 最大500KB
+
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
   /**
@@ -119,7 +123,8 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
     });
 
     this._workflowManager.on('agentEvent', (event: AgentEvent) => {
-      this._logHistory.push(event);
+      // ログサイズの制限チェック
+      this._addLogWithLimit(event);
       this._postMessage({
         type: 'agentEvent',
         event,
@@ -214,6 +219,31 @@ export class WorkflowPanel implements vscode.WebviewViewProvider {
   private _postMessage(message: unknown): void {
     if (this._view) {
       this._view.webview.postMessage(message);
+    }
+  }
+
+  /**
+   * ログをサイズ制限付きで追加
+   */
+  private _addLogWithLimit(event: AgentEvent): void {
+    this._logHistory.push(event);
+
+    // エントリ数制限チェック
+    if (this._logHistory.length > this.MAX_LOG_ENTRIES) {
+      // 古いエントリを削除（最初の10%を削除）
+      const removeCount = Math.floor(this.MAX_LOG_ENTRIES * 0.1);
+      this._logHistory.splice(0, removeCount);
+      console.log(`[WorkflowPanel] ログ履歴を圧縮: ${removeCount}エントリ削除`);
+    }
+
+    // バイトサイズ制限チェック
+    const totalSize = JSON.stringify(this._logHistory).length;
+    if (totalSize > this.MAX_LOG_SIZE_BYTES) {
+      // サイズが超過している場合は古いエントリを削除
+      while (JSON.stringify(this._logHistory).length > this.MAX_LOG_SIZE_BYTES && this._logHistory.length > 0) {
+        this._logHistory.shift();
+      }
+      console.log(`[WorkflowPanel] ログ履歴をバイトサイズ制限により圧縮`);
     }
   }
 

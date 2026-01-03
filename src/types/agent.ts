@@ -131,6 +131,16 @@ export interface BestPracticeCheck {
 }
 
 /**
+ * コード検品結果
+ */
+export interface CodeInspection {
+  redundancy: string;      // 冗長性の評価
+  commentQuality: string;  // コメント品質の評価
+  dependencies: string;    // 依存関係の評価
+  architecture: string;    // 全体構造の評価
+}
+
+/**
  * レビュアーエージェントの出力
  */
 export interface ReviewerOutput {
@@ -140,6 +150,7 @@ export interface ReviewerOutput {
   overallScore: number; // 0-100
   approved: boolean;
   summary: string;
+  codeInspection?: CodeInspection; // コード検品結果（オプション）
 }
 
 // ============================================

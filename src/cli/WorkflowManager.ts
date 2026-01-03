@@ -17,6 +17,7 @@ import {
   AgentEvent,
   AgentType,
 } from '../types/agent';
+import { analyzeCodeStructure, formatStructureSummary } from '../utils/codeStructureAnalyzer';
 
 /**
  * ワークフローマネージャーのオプション
@@ -150,6 +151,14 @@ export class WorkflowManager extends EventEmitter {
 
       const engineerOutput = this.parseEngineerOutput(engineerResult.output);
       this.currentResult.engineerOutput = engineerOutput;
+
+      // コード構造の解析と出力
+      const structureSummary = analyzeCodeStructure(engineerOutput.generatedFiles);
+      const summaryMarkdown = formatStructureSummary(structureSummary);
+      console.log('[WorkflowManager] コード構造サマリー:\n' + summaryMarkdown);
+
+      // イベント発行（UI表示用）
+      this.emitAgentEvent('progress', 'engineer', summaryMarkdown);
 
       // ステップ4: レビュアーエージェントで品質チェック
       this.updateStatus('reviewing');
@@ -289,7 +298,12 @@ export class WorkflowManager extends EventEmitter {
     prompt += `engineer-agent.md に記載された形式に従って、以下を実行してください：\n`;
     prompt += `1. 既存のコードベースを調査\n`;
     prompt += `2. 計画に従ってコードを生成・変更\n`;
-    prompt += `3. JSON形式で結果を返す（generatedFiles, dependencies, notes）`;
+    prompt += `3. JSON形式で結果を返す（generatedFiles, dependencies, notes）\n\n`;
+    prompt += `**コード品質要件**:\n`;
+    prompt += `- 冗長なコード、重複ロジックは避ける\n`;
+    prompt += `- 不要なコメントアウトされたコードは含めない\n`;
+    prompt += `- 過度な抽象化を避け、シンプルに保つ\n`;
+    prompt += `- 自明なコメントは書かない（コードで表現できることはコードで）`;
 
     return prompt;
   }
@@ -306,7 +320,13 @@ export class WorkflowManager extends EventEmitter {
       prompt += `- ${file.path} (${file.action}): ${file.summary}\n`;
     });
 
-    prompt += `\n**重要**: 必ず以下のJSON形式のみで返してください。説明文やマークダウンは含めず、純粋なJSONのみを出力してください：\n\n`;
+    prompt += `\n**検品チェックリスト**:\n`;
+    prompt += `1. 冗長性: 重複コード、不要な抽象化がないか\n`;
+    prompt += `2. コメント: 不要なコメントアウト、TODOの残しがないか\n`;
+    prompt += `3. 依存関係: ファイル間の依存が適切か、循環参照がないか\n`;
+    prompt += `4. 全体構造: アーキテクチャが明確で理解しやすいか\n\n`;
+
+    prompt += `**重要**: 必ず以下のJSON形式のみで返してください。説明文やマークダウンは含めず、純粋なJSONのみを出力してください：\n\n`;
     prompt += `\`\`\`json\n`;
     prompt += `{\n`;
     prompt += `  "securityIssues": [],\n`;
@@ -314,7 +334,13 @@ export class WorkflowManager extends EventEmitter {
     prompt += `  "bestPractices": [],\n`;
     prompt += `  "overallScore": 85,\n`;
     prompt += `  "approved": true,\n`;
-    prompt += `  "summary": "全体的な評価のサマリー"\n`;
+    prompt += `  "summary": "全体的な評価のサマリー",\n`;
+    prompt += `  "codeInspection": {\n`;
+    prompt += `    "redundancy": "冗長性の評価",\n`;
+    prompt += `    "commentQuality": "コメント品質の評価",\n`;
+    prompt += `    "dependencies": "依存関係の評価",\n`;
+    prompt += `    "architecture": "全体構造の評価"\n`;
+    prompt += `  }\n`;
     prompt += `}\n`;
     prompt += `\`\`\``;
 
