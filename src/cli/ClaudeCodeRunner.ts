@@ -163,6 +163,8 @@ export class ClaudeCodeRunner extends EventEmitter {
           ...process.env,
           // エージェント定義ファイルのパスを環境変数で渡す
           CLAUDE_AGENT: agentName,
+          // Homebrew の bin ディレクトリを PATH に追加
+          PATH: `/opt/homebrew/bin:${process.env.PATH}`,
         },
       });
 

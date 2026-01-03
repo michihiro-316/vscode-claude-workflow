@@ -73,7 +73,12 @@ async function checkClaudeCodeCli(): Promise<void> {
   const execAsync = promisify(exec);
 
   try {
-    await execAsync('claude --version');
+    await execAsync('claude --version', {
+      env: {
+        ...process.env,
+        PATH: `/opt/homebrew/bin:${process.env.PATH}`,
+      },
+    });
     console.log('Claude Code CLI is installed');
   } catch (error) {
     vscode.window
